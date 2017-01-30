@@ -4,9 +4,31 @@ from scipy.interpolate import griddata
 
 
 def streamplot2d(ax, X, Y, U, V, nx=None, ny=None, color=None, linewidth=None, scale=1, **kw):
+    """
+    Create a streamplot from an uneven grid
+    :param ax: Axes instance
+    :param X: multidimensional array of x positions
+    :param Y: multidimensional array of y positions of same shape as X array
+    :param U: multidimensional array of u components of same shape as X array
+    :param V: multidimensional array of v components of same shape as X array
+    :param nx: number of points along x for interpolation
+    :param ny: number of points along y for interpolation
+    :param color: line color
+                  also allows array of same shape as inputs
+                  or "magnitude" to use vector magnitude
+    :param linewidth: line width
+                      also allows array of same shape as inputs
+                      or "magnitude" to use vector magnitude
+    :param scale: line width scaling factor when using an array or "magnitude" for linewidths
+    :param kw: keyword arguments (see matplotlib.streamplot.streamplot)
+    :return: see matplotlib.streamplot.streamplot
+    """
+
+    # define grid
     x = np.linspace(X.min(), X.max(), nx)
     y = np.linspace(Y.min(), Y.max(), ny)
 
+    # interpolation coords
     gX, gY = np.meshgrid(x, y)
     u = np.ma.masked_invalid(
         griddata((X.flatten(), Y.flatten()),
@@ -20,6 +42,7 @@ def streamplot2d(ax, X, Y, U, V, nx=None, ny=None, color=None, linewidth=None, s
             (gX, gY),
             method='linear'))
 
+    # set linewidths
     if isinstance(linewidth, np.ndarray):
         if linewidth.shape == U.shape:
             linewidth = scale*np.ma.masked_invalid(
@@ -34,6 +57,7 @@ def streamplot2d(ax, X, Y, U, V, nx=None, ny=None, color=None, linewidth=None, s
     if linewidth is not None:
         kw['linewidth'] = linewidth
 
+    # set colors
     if isinstance(color, np.ndarray):
         if color.shape == U.shape:
             color = np.ma.masked_invalid(
@@ -47,7 +71,8 @@ def streamplot2d(ax, X, Y, U, V, nx=None, ny=None, color=None, linewidth=None, s
 
     if color is not None:
         kw['color'] = color
-
+    
+    # execute streamplot with equally spaced grid
     return ax.streamplot(x, y, u, v, **kw)
 
 
